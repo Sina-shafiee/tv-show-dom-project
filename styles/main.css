@@ -12,6 +12,43 @@
 body {
   font-family: 'Poppins', sans-serif;
   font-weight: 300;
+  background-color: rgb(252, 248, 248);
+}
+
+/*
+    header styles
+*/
+
+.header {
+  padding: 2rem;
+}
+
+.header > .logo {
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.header #search-query {
+  height: 3rem;
+  padding: 8px 18px;
+  font-size: 1rem;
+  flex-shrink: 1;
+  margin-top: 1rem;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 1px 1px 0px;
+}
+
+.header #search-query:focus {
+  outline: 2px solid #5555ff;
+}
+
+.header .count-element {
+  font-size: 1.1rem;
+  padding-top: 1rem;
+  text-align: center;
+  width: 100%;
 }
 
 /*
@@ -19,32 +56,55 @@ body {
 */
 .main {
   padding: 2rem;
+}
+.cardsContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, auto));
+  grid-template-columns: repeat(auto-fill, minmax(260px, auto));
   grid-template-rows: auto;
+  place-content: center center;
   gap: 2rem;
 }
-
 .episodeCard {
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  position: relative;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+  max-width: 400px;
+  height: 300px;
+  background-color: red;
+  transition: all 0.4s ease-out;
+}
+
+.episodeCard:hover {
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 }
 
 .episodeCard:hover .episodeCard__img {
   scale: 1.1;
 }
+.episodeCard:hover .episodeCard__body {
+  bottom: 0;
+  opacity: 1;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
 
 .episodeCard__img {
-  width: 100%;
+  min-height: 100%;
   height: auto;
-  object-fit: cover;
+  object-fit: contain;
   transition: all 3s ease-in;
 }
 
 .episodeCard__body {
+  position: absolute;
   padding: 1rem;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.807);
+  bottom: -60px;
+  border-radius: 8px;
+  transition: all 0.4s ease-out;
 }
 
 .episodeCard__body-heading {
@@ -56,8 +116,9 @@ body {
 
 .episodeCard__body-heading > h2 {
   font-weight: 500;
-  font-size: 1.4em;
+  font-size: 1.2em;
 }
+
 .episodeCard__body-heading > p {
   font-weight: 500;
   background-color: #983af0;
@@ -65,13 +126,18 @@ body {
   padding: 1px 2px;
   border-radius: 4px;
 }
+
+.episodeCard__body-desc {
+  display: flex;
+}
 /*
     footer styles
 */
 
-footer {
+.footer {
   background-color: #1e1e1e;
   color: white;
+  margin-top: 1.4rem;
 }
 
 .license {
@@ -86,4 +152,25 @@ footer {
 
 .license > a:hover {
   color: #c484ff;
+}
+
+/*
+    error section styles
+*/
+
+.error-element {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 
+    media queries
+*/
+
+@media screen and (min-width: 480px) {
+  .cardsContainer {
+    grid-template-columns: repeat(auto-fill, minmax(300px, auto));
+  }
 }
