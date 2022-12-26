@@ -1,36 +1,76 @@
+/**
+ * this script is responsible for anything you see on browser
+ * except the styles which are coming from main.css
+ *    Sina Shafiee DEC 2022
+ *
+ *
+ * main functions :
+ *
+ *    1- renderBaseTags => append header main and footer elements on body and invoke function 4 and function 5
+ *    2- fetchAllEpisodes => fetch data first time page loads and render main element and invoke function 3
+ *    3- renderEpisodes => loop over all incoming episode objects and render cards and its related tags on dom
+ *    4- renderHeader => render header content on dom
+ *    5- renderFooter => render footer content on dom
+ *    6- searchEpisodesByQuery => its invoked by typing on header's search input. filter the content based on
+ *      search query and if any movie exist its gonna invoke function 3 to render that elements else its gonna
+ *      invoke function 7
+ *      and also invoke function 8 to render the count of found episodes
+ *    7- renderNotFound => render not found section on dom
+ *    9- renderCount => render search result count
+ *
+ * double click on function name and pres ctrl + f to find the function declaration
+ */
+
+// page header element
+const headerEl = document.createElement('header');
+headerEl.classList.add('header');
 // main page content
 const mainEl = document.createElement('main');
 mainEl.classList.add('main');
 // page footer element
 const footerEl = document.createElement('footer');
+footerEl.classList.add('footer');
 
 /**
- * responsible for fetching data from api endpoint
+ * responsible for appending above header, main and footer elements on body TAG
  */
-const fetchAllEpisodes = async () => {
-  // fetching data
-  const response = await fetch('https://api.tvmaze.com/shows/82/episodes');
-
-  // converting response to a useable js data type
-  const data = await response.json();
-
-  // appending main and footer element to body
+function renderBaseTags() {
+  // appending main and footer element to
+  document.body.append(headerEl);
   document.body.append(mainEl);
   document.body.appendChild(footerEl);
 
   // rendering episode cards and footer
-  renderEpisodes(data);
+  renderHeader();
   renderFooter();
-};
+}
+
+let episodesData = null;
+
+/**
+ * responsible for fetching data from api endpoint
+ */
+async function fetchAllEpisodes() {
+  // fetching data
+  const response = await fetch('https://api.tvmaze.com/shows/82/episodes');
+  // converting response to a useable js data type
+  episodesData = await response.json();
+
+  // rendering episode cards on dom
+  renderEpisodes(episodesData);
+}
 
 /**
  *
  * @param {array of episode objects} data
  * responsible for rendering all episode cards to the page
  */
-const renderEpisodes = (data) => {
-  // looping over array of movies to create a post for each
-  data.forEach(({ image, name, season, number, summary }) => {
+function renderEpisodes(data) {
+  const cardsContainer = document.createElement('section');
+  cardsContainer.classList.add('cardsContainer');
+
+  // looping over array of movies to create a card for each
+  data.forEach(({ image, name, season, number, summary }, index) => {
     // creating container element
     const containerEl = document.createElement('article');
     containerEl.classList.add('episodeCard');
@@ -51,7 +91,7 @@ const renderEpisodes = (data) => {
 
     // creating h2 element for episodeCard name
     const nameEl = document.createElement('h2');
-    nameEl.textContent = name;
+    nameEl.textContent = name.substring(0, 24);
 
     // creating p tag for episode part
     const partNumberEl = document.createElement('p');
@@ -62,7 +102,7 @@ const renderEpisodes = (data) => {
     // episode description element
     const descEl = document.createElement('p');
     descEl.classList.add('episodeCard__body-desc');
-    descEl.innerHTML = summary.substring(0, 120);
+    descEl.innerHTML = summary.substring(0, 60).concat('..');
 
     // appending img to card
     containerEl.append(imageEl);
@@ -78,24 +118,124 @@ const renderEpisodes = (data) => {
     containerEl.append(episodeCardBodyEl);
 
     // appending the card to dom entry point root element
-    mainEl.append(containerEl);
+    cardsContainer.append(containerEl);
+    mainEl.append(cardsContainer);
   });
-};
+}
+
+/**
+ * responsible for rendering header
+ */
+function renderHeader() {
+  /**
+   * todo create select and options
+   */
+  // creating logo and select container
+  const containerTopEl = document.createElement('div');
+  containerTopEl.classList.add('header-top');
+  // creating logo
+  const logoEl = document.createElement('h1');
+  logoEl.classList.add('logo');
+  logoEl.textContent = 'TVMAZE';
+
+  // creating search box and adding event listener to it
+  const searchBoxEl = document.createElement('input');
+  searchBoxEl.setAttribute('id', 'search-query');
+  searchBoxEl.setAttribute('placeholder', 'search here');
+
+  searchBoxEl.addEventListener('input', (e) => {
+    searchEpisodesByQuery(e.target.value);
+  });
+
+  // appending them to the dom
+  containerTopEl.append(logoEl);
+  headerEl.append(containerTopEl);
+  headerEl.append(searchBoxEl);
+}
 
 /**
  * responsible for rendering page footer element
  */
-
-const renderFooter = () => {
+function renderFooter() {
   // creating tv maze reference
   const licenseEl = document.createElement('p');
   licenseEl.classList.add('license');
 
-  licenseEl.innerHTML = `this webpage is powered with <a target="_blank" href='https://www.tvmaze.com/api'>Tvmaze</a> Api service`;
+  licenseEl.innerHTML = `this webpage is powered with <a target="_blank" href='https://www.tvmaze.com'>Tvmaze</a> Api service`;
 
   // appending lic element to footer
   footerEl.append(licenseEl);
-};
+}
+
+/**
+ *
+ * @param {search query coming from header input} query
+ * invoke renderEpisodes function or renderNotFound based on search result
+ */
+
+async function searchEpisodesByQuery(query) {
+  // remove all previous data
+  if (document.querySelector('.cardsContainer')) {
+    document.querySelector('.cardsContainer').remove();
+  }
+
+  // remove prev count element
+  if (document.querySelector('.count-element')) {
+    document.querySelector('.count-element').remove();
+  }
+
+  // filter data based on given query
+  const filteredData = episodesData.filter((episode) => {
+    return (
+      episode.name.toLowerCase().indexOf(query.toLowerCase()) !== -1 ||
+      episode.summary.toLowerCase().indexOf(query.toLowerCase()) !== -1
+    );
+  });
+
+  // functionality to render what based on conditions
+  if (filteredData.length > 0) {
+    renderEpisodes(filteredData);
+    renderCount(filteredData.length);
+    if (document.querySelector('.error-element')) {
+      document.querySelector('.error-element').remove();
+    }
+
+    if (filteredData.length === 73) {
+      document.querySelector('.count-element').remove();
+    }
+  } else if (!document.querySelector('.error-element')) {
+    renderNotFound();
+  } else {
+    document.querySelector('.count-element').remove();
+  }
+}
+
+/**
+ * responsible for rendering found episode count
+ */
+function renderNotFound() {
+  // error element container
+  const errorEl = document.createElement('div');
+  errorEl.classList.add('error-element');
+
+  const errorTextEl = document.createElement('p');
+  errorTextEl.textContent = ' sorry no result found';
+
+  // appending to the page
+  errorEl.append(errorTextEl);
+  mainEl.append(errorEl);
+}
+
+function renderCount(count) {
+  // paragraph element for count
+  const countEl = document.createElement('p');
+  countEl.classList.add('count-element');
+  countEl.textContent = `${count} Episodes found`;
+
+  //appending to header
+  headerEl.append(countEl);
+}
 
 // on screen load fetching all the data and rendering the content
+document.addEventListener('DOMContentLoaded', renderBaseTags);
 document.addEventListener('DOMContentLoaded', fetchAllEpisodes);
