@@ -267,7 +267,7 @@ function renderSelect(episodes) {
     optionEl.setAttribute('value', name);
     optionEl.textContent = `S${season > 9 ? season : '0' + season}E${
       number > 9 ? number : '0' + number
-    } - ${name}`;
+    } - ${name.substring(0, 25)}`;
 
     selectEl.append(optionEl);
   });
