@@ -16,7 +16,10 @@
  *      invoke function 7
  *      and also invoke function 8 to render the count of found episodes
  *    7- renderNotFound => render not found section on dom
- *    9- renderCount => render search result count
+ *    8- renderCount => render search result count
+ *    9- renderSelect => render select and its options on dom
+ *    10- handleSelectChange => handle select option change and render element based
+ *       on select element value
  *
  * double click on function name and pres ctrl + f to find the function declaration
  */
@@ -51,13 +54,18 @@ let episodesData = null;
  * responsible for fetching data from api endpoint
  */
 async function fetchAllEpisodes() {
-  // fetching data
-  const response = await fetch('https://api.tvmaze.com/shows/82/episodes');
-  // converting response to a useable js data type
-  episodesData = await response.json();
+  try {
+    // fetching data
+    const response = await fetch('https://api.tvmaze.com/shows/82/episodes');
+    // converting response to a useable js data type
+    episodesData = await response.json();
 
-  // rendering episode cards on dom
-  renderEpisodes(episodesData);
+    // rendering episode cards on dom
+    renderEpisodes(episodesData);
+    renderSelect(episodesData);
+  } catch (err) {
+    alert('please turn on VPN');
+  }
 }
 
 /**
@@ -93,6 +101,10 @@ function renderEpisodes(data) {
     const nameEl = document.createElement('h2');
     nameEl.textContent = name.substring(0, 24);
 
+    if (summary.length < 50) {
+      nameEl.style.paddingBottom = '1.6rem';
+    }
+
     // creating p tag for episode part
     const partNumberEl = document.createElement('p');
     partNumberEl.textContent = `S${season > 9 ? season : '0' + season}E${
@@ -127,9 +139,6 @@ function renderEpisodes(data) {
  * responsible for rendering header
  */
 function renderHeader() {
-  /**
-   * todo create select and options
-   */
   // creating logo and select container
   const containerTopEl = document.createElement('div');
   containerTopEl.classList.add('header-top');
@@ -174,6 +183,7 @@ function renderFooter() {
  */
 
 async function searchEpisodesByQuery(query) {
+  document.querySelector('select').value = 'all';
   // remove all previous data
   if (document.querySelector('.cardsContainer')) {
     document.querySelector('.cardsContainer').remove();
@@ -234,6 +244,56 @@ function renderCount(count) {
 
   //appending to header
   headerEl.append(countEl);
+}
+
+/**
+ *
+ * @param {array of episode objects} episodes
+ * render select element
+ */
+function renderSelect(episodes) {
+  const selectEl = document.createElement('select');
+
+  selectEl.addEventListener('change', handleSelectChange);
+
+  const selectAllOptionEl = document.createElement('option');
+  selectAllOptionEl.textContent = 'all episodes';
+  selectAllOptionEl.value = 'all';
+
+  selectEl.append(selectAllOptionEl);
+
+  episodes.forEach(({ season, number, name }) => {
+    const optionEl = document.createElement('option');
+    optionEl.setAttribute('value', name);
+    optionEl.textContent = `S${season > 9 ? season : '0' + season}E${
+      number > 9 ? number : '0' + number
+    } - ${name}`;
+
+    selectEl.append(optionEl);
+  });
+
+  selectEl.value = 'all';
+  document.querySelector('.header-top').append(selectEl);
+}
+
+/**
+ *
+ * @param {event object} e
+ * handle select element change
+ */
+function handleSelectChange(e) {
+  document.querySelector('#search-query').value = '';
+
+  if (e.target.value === 'all') {
+    document.querySelector('.cardsContainer').remove();
+    renderEpisodes(episodesData);
+  } else {
+    const filteredData = episodesData.filter(
+      (episode) => episode.name === e.target.value
+    );
+    document.querySelector('.cardsContainer').remove();
+    renderEpisodes(filteredData);
+  }
 }
 
 // on screen load fetching all the data and rendering the content
